@@ -30,8 +30,8 @@ public class SelfProductService implements iProductService{
 
     @Override
     public Product addNewProduct(Product product) {
-        this.productRepository.save(product);
-        return product;
+        return this.productRepository.save(product);
+        //return product;
     }
 
     @Override

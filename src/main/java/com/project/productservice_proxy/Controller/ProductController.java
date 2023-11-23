@@ -3,26 +3,33 @@ package com.project.productservice_proxy.Controller;
 import com.project.productservice_proxy.DTO.ProductDto;
 import com.project.productservice_proxy.Models.Categories;
 import com.project.productservice_proxy.Models.Product;
+import com.project.productservice_proxy.Security.JwtObject;
+import com.project.productservice_proxy.Security.TokenValidator;
 import com.project.productservice_proxy.Service.FakeStoreProductService;
 import com.project.productservice_proxy.clients.IClientProductDto;
 import com.project.productservice_proxy.Service.iProductService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/products")
 public class ProductController {
 
     iProductService productService;
-    public ProductController(iProductService productService)
+    TokenValidator tokenValidator;
+    public ProductController(iProductService productService, TokenValidator tokenValidator)
     {
         this.productService=productService;
+        this.tokenValidator=tokenValidator;
     }
     @GetMapping("")
     public ResponseEntity<List<ProductDto>> getAllProducts()
@@ -38,9 +45,20 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDto> getSingleProduct(@PathVariable("id") Long productId)
+    public ResponseEntity<ProductDto> getSingleProduct(@Nullable @RequestHeader(HttpHeaders.AUTHORIZATION) String authToken,
+                                                       @PathVariable("id") Long productId)
     {
         try {
+            JwtObject authTokenObj=null;
+            if(authToken != null)
+            {
+                Optional<JwtObject> authObjectOptional=tokenValidator.validateToken(authToken);
+                if(authObjectOptional.isEmpty())
+                {
+                    //throw exception
+                }
+                authTokenObj=authObjectOptional.get();
+            }
             MultiValueMap<String, String> headers=new LinkedMultiValueMap<>();
             headers.add("Accept", "application/json");
             headers.add("Content-Type", "application/json");
